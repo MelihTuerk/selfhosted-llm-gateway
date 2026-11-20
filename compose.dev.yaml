@@ -1,0 +1,10 @@
+# Development override: also publish llama.cpp directly on the host (localhost only).
+# Usage:  docker compose -f compose.yaml -f compose.dev.yaml --profile cpu up -d --build
+# Useful to compare gateway and backend, or to run the gateway with uvicorn on the host.
+
+services:
+  llm:
+    # A port is only published from a non-internal network, so attach one.
+    networks: [backend, frontend]
+    ports:
+      - "127.0.0.1:${LLM_PORT:-8080}:8080"

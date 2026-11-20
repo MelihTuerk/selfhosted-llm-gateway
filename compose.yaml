@@ -1,8 +1,26 @@
 # Self-hosted LLM stack.
-# Start the CPU profile:  docker compose --profile cpu up -d
+# Start the CPU profile:  docker compose --profile cpu up -d --build
 # All settings come from .env (see .env.example).
+#
+# Only the gateway is reachable from outside. llama.cpp sits on an internal network.
+# For direct access to llama.cpp while debugging, add compose.dev.yaml (see there).
 
 services:
+  gateway:
+    build: ./gateway
+    profiles: [cpu]
+    restart: unless-stopped
+    environment:
+      GATEWAY_BACKEND_URL: http://llm:8080
+      GATEWAY_API_KEYS: ${GATEWAY_API_KEYS:?set GATEWAY_API_KEYS in .env}
+    ports:
+      - "127.0.0.1:${GATEWAY_PORT:-8000}:8000"
+    networks: [frontend, backend]
+    depends_on:
+      llm:
+        # Start the gateway only once the model is loaded.
+        condition: service_healthy
+
   llm:
     image: ${LLAMA_IMAGE:-ghcr.io/ggml-org/llama.cpp:server}
     profiles: [cpu]
@@ -26,9 +44,8 @@ services:
       - ${PARALLEL:-2}
       # Expose Prometheus metrics on /metrics (scraped in M4).
       - --metrics
-    ports:
-      # Bound to localhost only: later only the gateway should be reachable.
-      - "127.0.0.1:${LLM_PORT:-8080}:8080"
+    # No ports: only reachable as http://llm:8080 from containers on "backend".
+    networks: [backend]
     healthcheck:
       # /health returns 200 once the model is loaded, 503 while loading.
       test: ["CMD", "curl", "-fsS", "http://localhost:8080/health"]
@@ -36,3 +53,10 @@ services:
       timeout: 5s
       retries: 3
       start_period: 60s
+
+networks:
+  # Normal network: lets the gateway publish its port to the host.
+  frontend:
+  # Internal network: no route to the host or the internet, only container to container.
+  backend:
+    internal: true
