@@ -2,16 +2,10 @@
 
 import httpx
 from fastapi import Request
-from fastapi.responses import JSONResponse, Response, StreamingResponse
+from fastapi.responses import Response, StreamingResponse
 from starlette.background import BackgroundTask
 
-
-def error_response(status_code: int, message: str, error_type: str) -> JSONResponse:
-    """Build an error body in the same shape the OpenAI API uses."""
-    return JSONResponse(
-        status_code=status_code,
-        content={"error": {"message": message, "type": error_type}},
-    )
+from gateway.errors import error_response
 
 
 async def forward(request: Request, path: str) -> Response:

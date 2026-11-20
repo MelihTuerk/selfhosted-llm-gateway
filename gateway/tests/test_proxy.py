@@ -1,21 +1,11 @@
 import json
 
 import httpx
-import pytest
 import respx
-from fastapi.testclient import TestClient
 
-from gateway.main import app
 from gateway.settings import get_settings
 
 BACKEND = get_settings().backend_url
-
-
-@pytest.fixture
-def client():
-    # The context manager runs the app's lifespan, which creates the HTTP client.
-    with TestClient(app) as test_client:
-        yield test_client
 
 
 @respx.mock
