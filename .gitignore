@@ -1,0 +1,29 @@
+# Secrets
+.env
+!.env.example
+
+# Model files (downloaded via scripts/download-model.sh)
+models/
+*.gguf
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.egg-info/
+dist/
+build/
+
+# Editors / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Local AI assistant config (not part of the public repo)
+CLAUDE.md
+.claude/
