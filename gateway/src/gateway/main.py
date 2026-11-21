@@ -10,6 +10,7 @@ from fastapi import APIRouter, Depends, FastAPI, Request, Response
 from gateway.auth import require_api_key
 from gateway.errors import APIError, handle_api_error
 from gateway.proxy import forward
+from gateway.ratelimit import RateLimiter, enforce_rate_limit
 from gateway.settings import get_settings
 
 logger = logging.getLogger("gateway")
@@ -21,6 +22,10 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     settings = get_settings()
     if not settings.api_keys:
         logger.warning("GATEWAY_API_KEYS is empty: every /v1 request will be rejected.")
+
+    app.state.rate_limiter = RateLimiter(settings.rate_limit_per_minute, settings.rate_limit_burst)
+    if not app.state.rate_limiter.enabled:
+        logger.warning("Rate limiting is disabled.")
 
     timeout = httpx.Timeout(settings.backend_timeout, connect=5.0)
     async with httpx.AsyncClient(base_url=settings.backend_url, timeout=timeout) as client:
@@ -41,8 +46,12 @@ async def healthz() -> dict[str, str]:
     return {"status": "ok"}
 
 
-# Every route on this router requires a valid API key.
-v1 = APIRouter(prefix="/v1", dependencies=[Depends(require_api_key)])
+# Every route on this router requires a valid API key and is rate limited per key.
+# Auth runs first, so invalid keys get 401 and never create a rate-limit bucket.
+v1 = APIRouter(
+    prefix="/v1",
+    dependencies=[Depends(require_api_key), Depends(enforce_rate_limit)],
+)
 
 
 @v1.get("/models")

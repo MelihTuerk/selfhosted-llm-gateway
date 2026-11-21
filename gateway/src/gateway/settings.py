@@ -21,6 +21,11 @@ class Settings(BaseSettings):
     # Timeout for backend requests in seconds (generation can take a while).
     backend_timeout: float = 300.0
 
+    # Rate limit per API key (token bucket): sustained requests per minute, and how many
+    # requests may arrive at once on top of that. Set either to 0 to disable the limit.
+    rate_limit_per_minute: float = Field(default=60.0, ge=0)
+    rate_limit_burst: int = Field(default=10, ge=0)
+
     @field_validator("api_keys", mode="before")
     @classmethod
     def split_api_keys(cls, value: object) -> object:
