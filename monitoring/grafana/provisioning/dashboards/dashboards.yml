@@ -1,0 +1,11 @@
+# Loads every dashboard JSON from /var/lib/grafana/dashboards at startup.
+apiVersion: 1
+
+providers:
+  - name: llm-stack
+    folder: LLM Stack
+    type: file
+    # Dashboards are code: changes belong in the JSON file in the repo, not in the UI.
+    allowUiUpdates: false
+    options:
+      path: /var/lib/grafana/dashboards
