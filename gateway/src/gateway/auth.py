@@ -3,10 +3,11 @@
 import secrets
 from typing import Annotated
 
-from fastapi import Depends
+from fastapi import Depends, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from gateway.errors import APIError
+from gateway.metrics import key_id
 from gateway.settings import Settings, get_settings
 
 # auto_error=False: return None instead of FastAPI's default error,
@@ -20,6 +21,7 @@ def _unauthorized(message: str) -> APIError:
 
 
 def require_api_key(
+    request: Request,
     credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer_scheme)],
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> str:
@@ -37,4 +39,6 @@ def require_api_key(
     if not any(secrets.compare_digest(token, key.encode()) for key in settings.api_keys):
         raise _unauthorized("Invalid API key.")
 
+    # Metrics label requests with this short hash instead of the secret key.
+    request.state.key_id = key_id(credentials.credentials)
     return credentials.credentials

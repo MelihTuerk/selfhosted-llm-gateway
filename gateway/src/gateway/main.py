@@ -6,9 +6,11 @@ from contextlib import asynccontextmanager
 
 import httpx
 from fastapi import APIRouter, Depends, FastAPI, Request, Response
+from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 
 from gateway.auth import require_api_key
 from gateway.errors import APIError, handle_api_error
+from gateway.metrics import MetricsMiddleware
 from gateway.proxy import forward
 from gateway.ratelimit import RateLimiter, enforce_rate_limit
 from gateway.settings import get_settings
@@ -35,6 +37,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 app = FastAPI(title="selfhosted-llm-gateway", lifespan=lifespan)
 app.add_exception_handler(APIError, handle_api_error)
+app.add_middleware(MetricsMiddleware)
 
 
 @app.get("/healthz")
@@ -44,6 +47,16 @@ async def healthz() -> dict[str, str]:
     Deliberately open, so Docker's healthcheck works without an API key.
     """
     return {"status": "ok"}
+
+
+@app.get("/metrics")
+async def metrics() -> Response:
+    """Prometheus metrics in the text exposition format.
+
+    Open like /healthz: Prometheus scrapes it without a key, and it contains no secrets
+    (API keys appear only as short hashes).
+    """
+    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 
 # Every route on this router requires a valid API key and is rate limited per key.
