@@ -75,3 +75,65 @@ jobs:
           tags: selfhosted-llm-gateway/gateway:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  e2e:
+    name: End-to-end smoke test (CPU profile)
+    runs-on: ubuntu-24.04
+    needs: lint-test
+    env:
+      # Throwaway values that only live for this CI run.
+      GATEWAY_API_KEY: ci-e2e-key
+    steps:
+      - uses: actions/checkout@v7
+
+      # The model (~500 MB) changes only when the download catalog changes.
+      - name: Cache model
+        uses: actions/cache@v5
+        with:
+          path: models
+          key: model-${{ hashFiles('scripts/download-model.sh') }}
+
+      # Verifies the checksum, and skips the download on a cache hit.
+      - name: Download model
+        run: scripts/download-model.sh qwen2.5-0.5b-q4
+
+      - name: Create .env from example
+        run: |
+          cp .env.example .env
+          sed -i "s/^GATEWAY_API_KEYS=.*/GATEWAY_API_KEYS=${GATEWAY_API_KEY}/" .env
+          sed -i "s/^GRAFANA_ADMIN_PASSWORD=.*/GRAFANA_ADMIN_PASSWORD=ci-e2e-password/" .env
+
+      # --wait returns once every container is healthy (fails on timeout).
+      - name: Start stack
+        run: docker compose --profile cpu up -d --build --wait --wait-timeout 300
+
+      - uses: astral-sh/setup-uv@v10
+
+      - name: OpenAI SDK smoke test
+        run: uv run scripts/sdk_smoke_test.py
+
+      - name: Check gateway metrics
+        run: |
+          metrics=$(curl -fsS http://127.0.0.1:8000/metrics)
+          # The smoke test generated tokens, so the counter must be above zero.
+          echo "$metrics" | grep '^gateway_tokens_generated_total{'
+          echo "$metrics" | awk '/^gateway_tokens_generated_total\{/ {sum += $2} END {exit !(sum > 0)}'
+
+      - name: Check Prometheus targets
+        run: |
+          # Give Prometheus time for at least one scrape (interval 15 s).
+          for _ in $(seq 1 12); do
+            up=$(curl -fsS 'http://127.0.0.1:9090/api/v1/query?query=sum(up)' | jq -r '.data.result[0].value[1] // 0')
+            [ "$up" = "2" ] && echo "All 2 targets up" && exit 0
+            sleep 5
+          done
+          echo "Expected 2 targets up, got $up" >&2
+          exit 1
+
+      - name: Show logs on failure
+        if: failure()
+        run: docker compose --profile cpu logs --no-color
+
+      - name: Stop stack
+        if: always()
+        run: docker compose --profile cpu down -v
