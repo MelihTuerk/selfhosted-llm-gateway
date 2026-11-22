@@ -24,7 +24,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: astral-sh/setup-uv@v10
+      - uses: astral-sh/setup-uv@v10.4.0
         with:
           enable-cache: true
           cache-dependency-glob: gateway/uv.lock
@@ -107,7 +107,7 @@ jobs:
       - name: Start stack
         run: docker compose --profile cpu up -d --build --wait --wait-timeout 300
 
-      - uses: astral-sh/setup-uv@v10
+      - uses: astral-sh/setup-uv@v10.4.0
 
       - name: OpenAI SDK smoke test
         run: uv run scripts/sdk_smoke_test.py
