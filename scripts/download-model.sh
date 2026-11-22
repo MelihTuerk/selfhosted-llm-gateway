@@ -3,48 +3,58 @@
 #
 # Usage: scripts/download-model.sh [preset]
 #   Presets are defined in the catalog below. Default: qwen2.5-0.5b-q4
+#
+# Large models are published as split GGUF files (name-00001-of-0000N.gguf).
+# Such a preset has one catalog line per part; point MODEL_FILE at the first part
+# and llama.cpp loads the remaining parts from the same directory.
 set -euo pipefail
 
 # preset | Hugging Face repo | file | sha256
 CATALOG="
 qwen2.5-0.5b-q4|Qwen/Qwen2.5-0.5B-Instruct-GGUF|qwen2.5-0.5b-instruct-q4_k_m.gguf|74a4da8c9fdbcd15bd1f6d01d621410d31c6fc00986f5eb687824e7b93d7a9db
 qwen2.5-0.5b-q8|Qwen/Qwen2.5-0.5B-Instruct-GGUF|qwen2.5-0.5b-instruct-q8_0.gguf|ca59ca7f13d0e15a8cfa77bd17e65d24f6844b554a7b6c12e07a5f89ff76844e
+qwen2.5-7b-q4|Qwen/Qwen2.5-7B-Instruct-GGUF|qwen2.5-7b-instruct-q4_k_m-00001-of-00002.gguf|dfce12e3862a5283ccfb88221b48480e58745165de856439950d0f22590580db
+qwen2.5-7b-q4|Qwen/Qwen2.5-7B-Instruct-GGUF|qwen2.5-7b-instruct-q4_k_m-00002-of-00002.gguf|539cf93f78e887edea1c04e2d7d8cdaca9d01dae9c9025bcb8accbe29df3d72a
 "
 
 preset="${1:-qwen2.5-0.5b-q4}"
 models_dir="$(cd "$(dirname "$0")/.." && pwd)/models"
 
-entry="$(grep "^${preset}|" <<<"$CATALOG" || true)"
-if [[ -z "$entry" ]]; then
+entries="$(grep "^${preset}|" <<<"$CATALOG" || true)"
+if [[ -z "$entries" ]]; then
   echo "Unknown preset: $preset" >&2
   echo "Available presets:" >&2
-  grep -v '^$' <<<"$CATALOG" | cut -d'|' -f1 | sed 's/^/  /' >&2
+  grep -v '^$' <<<"$CATALOG" | cut -d'|' -f1 | sort -u | sed 's/^/  /' >&2
   exit 1
 fi
-IFS='|' read -r _ repo file sha256 <<<"$entry"
 
 mkdir -p "$models_dir"
-target="$models_dir/$file"
 
-verify() {
-  echo "$sha256  $target" | sha256sum --check --status
+# Download one file and check it against its SHA-256; skip it if already verified.
+fetch() {
+  local repo="$1" file="$2" sha256="$3"
+  local target="$models_dir/$file"
+
+  if [[ -f "$target" ]] && echo "$sha256  $target" | sha256sum --check --status; then
+    echo "Already present and verified: $target"
+    return
+  fi
+
+  local url="https://huggingface.co/${repo}/resolve/main/${file}"
+  echo "Downloading $url"
+  # --continue-at - resumes an interrupted download; write to .part first
+  # so a half-finished file is never mistaken for a complete one.
+  curl --fail --location --progress-bar --continue-at - --output "$target.part" "$url"
+  mv "$target.part" "$target"
+
+  if ! echo "$sha256  $target" | sha256sum --check --status; then
+    echo "Checksum mismatch for $target, deleting it." >&2
+    rm -f "$target"
+    exit 1
+  fi
+  echo "OK: $target"
 }
 
-if [[ -f "$target" ]] && verify; then
-  echo "Already present and verified: $target"
-  exit 0
-fi
-
-url="https://huggingface.co/${repo}/resolve/main/${file}"
-echo "Downloading $url"
-# --continue-at - resumes an interrupted download; write to .part first
-# so a half-finished file is never mistaken for a complete one.
-curl --fail --location --progress-bar --continue-at - --output "$target.part" "$url"
-mv "$target.part" "$target"
-
-if ! verify; then
-  echo "Checksum mismatch for $target, deleting it." >&2
-  rm -f "$target"
-  exit 1
-fi
-echo "OK: $target"
+while IFS='|' read -r _ repo file sha256; do
+  fetch "$repo" "$file" "$sha256"
+done <<<"$entries"
