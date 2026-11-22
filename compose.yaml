@@ -66,12 +66,12 @@ services:
 
   llm:
     <<: *llm
-    image: ${LLAMA_IMAGE:-ghcr.io/ggml-org/llama.cpp:server}
+    image: ${LLAMA_IMAGE:-ghcr.io/ggml-org/llama.cpp:server-b12627}
     profiles: [cpu]
 
   llm-gpu:
     <<: *llm
-    image: ${LLAMA_GPU_IMAGE:-ghcr.io/ggml-org/llama.cpp:server-cuda}
+    image: ${LLAMA_GPU_IMAGE:-ghcr.io/ggml-org/llama.cpp:server-cuda-b12627}
     profiles: [gpu]
     environment:
       # Same as --n-gpu-layers: how many layers run on the GPU (99 = all of them).

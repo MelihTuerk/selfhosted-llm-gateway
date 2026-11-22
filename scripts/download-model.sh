@@ -15,6 +15,8 @@ qwen2.5-0.5b-q4|Qwen/Qwen2.5-0.5B-Instruct-GGUF|qwen2.5-0.5b-instruct-q4_k_m.ggu
 qwen2.5-0.5b-q8|Qwen/Qwen2.5-0.5B-Instruct-GGUF|qwen2.5-0.5b-instruct-q8_0.gguf|ca59ca7f13d0e15a8cfa77bd17e65d24f6844b554a7b6c12e07a5f89ff76844e
 qwen2.5-7b-q4|Qwen/Qwen2.5-7B-Instruct-GGUF|qwen2.5-7b-instruct-q4_k_m-00001-of-00002.gguf|dfce12e3862a5283ccfb88221b48480e58745165de856439950d0f22590580db
 qwen2.5-7b-q4|Qwen/Qwen2.5-7B-Instruct-GGUF|qwen2.5-7b-instruct-q4_k_m-00002-of-00002.gguf|539cf93f78e887edea1c04e2d7d8cdaca9d01dae9c9025bcb8accbe29df3d72a
+qwen2.5-7b-q5|Qwen/Qwen2.5-7B-Instruct-GGUF|qwen2.5-7b-instruct-q5_k_m-00001-of-00002.gguf|42f6693004793ee6cf1b2b723f0273b10f86a3bb2a949bd9128d4cda5fb866cd
+qwen2.5-7b-q5|Qwen/Qwen2.5-7B-Instruct-GGUF|qwen2.5-7b-instruct-q5_k_m-00002-of-00002.gguf|beba9d4f2f5a1fe7d144dcae332e68b52c26705c5310dece2e5d1997e091e134
 "
 
 preset="${1:-qwen2.5-0.5b-q4}"
