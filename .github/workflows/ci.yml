@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Cancel an older run of the same branch/PR when a new commit arrives.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# Read-only token by default; jobs that need more ask for it explicitly.
+permissions:
+  contents: read
+
+jobs:
+  lint-test:
+    name: Lint and test (gateway)
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: gateway
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: astral-sh/setup-uv@v10
+        with:
+          enable-cache: true
+          cache-dependency-glob: gateway/uv.lock
+
+      # --locked fails if uv.lock does not match pyproject.toml.
+      - name: Install dependencies
+        run: uv sync --locked
+
+      - name: Ruff lint
+        run: uv run ruff check --output-format=github .
+
+      - name: Ruff format check
+        run: uv run ruff format --check .
+
+      - name: Pytest
+        run: uv run pytest -q
+
+  compose:
+    name: Validate compose files
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+
+      # Required variables come from .env.example, so this also catches
+      # a variable that compose.yaml needs but .env.example is missing.
+      - name: Use example environment
+        run: cp .env.example .env
+
+      - name: docker compose config
+        run: |
+          docker compose --profile cpu config --quiet
+          docker compose -f compose.yaml -f compose.dev.yaml --profile cpu config --quiet
+
+  build:
+    name: Build gateway image
+    runs-on: ubuntu-24.04
+    needs: lint-test
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: docker/setup-buildx-action@v4
+
+      # Build only (no push); the layer cache is stored in GitHub Actions.
+      - uses: docker/build-push-action@v7
+        with:
+          context: gateway
+          push: false
+          tags: selfhosted-llm-gateway/gateway:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
