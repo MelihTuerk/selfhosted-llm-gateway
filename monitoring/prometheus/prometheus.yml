@@ -16,3 +16,13 @@ scrape_configs:
   - job_name: llm
     static_configs:
       - targets: ["llm:8080"]
+
+  # GPU metrics from nvidia_gpu_exporter (gpu profile only).
+  # DNS discovery instead of a static target: in the cpu profile the name does not
+  # resolve, so there is simply no target, instead of one that is always down.
+  - job_name: gpu
+    dns_sd_configs:
+      - names: ["gpu-exporter"]
+        type: A
+        port: 9835
+        refresh_interval: 30s

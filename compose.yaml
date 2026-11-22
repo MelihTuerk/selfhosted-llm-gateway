@@ -89,6 +89,27 @@ services:
               count: 1
               capabilities: [gpu]
 
+  gpu-exporter:
+    # Runs nvidia-smi and exposes GPU utilisation, VRAM, temperature and power
+    # as Prometheus metrics on :9835. GPU profile only.
+    image: ${GPU_EXPORTER_IMAGE:-utkuozdemir/nvidia_gpu_exporter:1.19.0}
+    profiles: [gpu]
+    restart: unless-stopped
+    environment:
+      # "utility" makes the NVIDIA Container Toolkit mount nvidia-smi and NVML
+      # into the container; compute (CUDA) access is not needed.
+      NVIDIA_DRIVER_CAPABILITIES: utility
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    # No ports: only Prometheus reads it. The image has no shell, so no healthcheck;
+    # Prometheus' "up" metric shows whether it is reachable.
+    networks: [backend]
+
   prometheus:
     image: ${PROMETHEUS_IMAGE:-prom/prometheus:v3.15.1}
     profiles: [cpu, gpu]
