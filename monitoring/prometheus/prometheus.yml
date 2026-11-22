@@ -26,3 +26,8 @@ scrape_configs:
         type: A
         port: 9835
         refresh_interval: 30s
+    relabel_configs:
+      # DNS discovery names the target by the container IP, which changes on every
+      # restart and would start a new time series each time. Use a stable name instead.
+      - target_label: instance
+        replacement: gpu-exporter:9835
