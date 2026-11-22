@@ -188,6 +188,22 @@ scripts/      model download (with SHA-256 check), OpenAI SDK smoke test
 compose.yaml  the stack, profiles cpu and gpu
 ```
 
+## Known limitations
+
+- **Rate-limit state lives in the gateway process.** A restart resets it, and several
+  gateway replicas would not share it (that would need e.g. Redis). It counts requests,
+  not tokens.
+- **A backend failure in the middle of a stream is not reported to the client.** Errors
+  before the first byte become a proper `502`/`504`; once streaming has started, the
+  connection just ends and the client sees a truncated answer.
+- **Time to first token and tokens/s are only measured for streaming requests.** A
+  non-streaming response has no "first token" the gateway could observe.
+- **One model, one backend.** There is no routing by model name and no fallback, e.g.
+  from GPU to CPU.
+- **No TLS, and `/metrics` is unauthenticated.** All ports listen on `127.0.0.1` only;
+  exposing the gateway beyond the host needs a TLS-terminating reverse proxy, and
+  `/metrics` should then not be exposed publicly.
+
 ## Lessons learned
 
 - **Pascal GPUs are on borrowed time.** NVIDIA's 580 driver branch is the last one with
