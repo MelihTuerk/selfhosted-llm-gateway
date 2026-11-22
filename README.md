@@ -97,6 +97,14 @@ The `gpu` profile swaps the llama.cpp service for the CUDA image with all layers
 GPU (`GPU_LAYERS=99`) and adds the GPU exporter. Gateway, Prometheus and Grafana are the
 same in both profiles.
 
+## Dashboard
+
+The provisioned Grafana dashboard during a benchmark on the GTX 1060 (`gpu` profile):
+gateway traffic and latency, llama.cpp throughput and queue, GPU utilisation, VRAM,
+temperature and power. The `401` line comes from requests with a wrong API key.
+
+![Grafana dashboard of the stack under load](docs/dashboard.png)
+
 ## Configuration
 
 Everything is set in `.env` (see [`.env.example`](.env.example) for all options):
