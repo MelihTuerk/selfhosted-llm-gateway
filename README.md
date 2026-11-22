@@ -57,6 +57,8 @@ flowchart LR
   requests, CSV + chart
 - CI on GitHub Actions: ruff, pytest, compose validation for both profiles, image build,
   and an end-to-end test that starts the CPU stack and talks to it with the `openai` SDK
+- Releases: a version tag (`vX.Y.Z`) runs the full CI and then publishes the gateway
+  image to `ghcr.io/melihtuerk/selfhosted-llm-gateway` as `X.Y.Z`, `X.Y` and `latest`
 
 ## Quickstart (CPU)
 
