@@ -1,14 +1,50 @@
 # Self-hosted LLM stack.
-# Start the CPU profile:  docker compose --profile cpu up -d --build
+# Start on a machine without GPU:   docker compose --profile cpu up -d --build
+# Start on an NVIDIA GPU machine:   docker compose --profile gpu up -d --build
 # All settings come from .env (see .env.example).
+#
+# Both profiles run the same gateway and monitoring; only the llama.cpp service differs
+# (llm on CPU, llm-gpu with CUDA). Both are reachable as http://llm:8080 on "backend".
 #
 # Only the gateway (and the local Prometheus/Grafana UIs) are reachable from the host.
 # For direct access to llama.cpp while debugging, add compose.dev.yaml (see there).
 
+# Settings shared by both llama.cpp services, merged in with "<<: *llm".
+x-llm: &llm
+  restart: unless-stopped
+  volumes:
+    # Models are downloaded by scripts/download-model.sh; read-only is enough.
+    - ./models:/models:ro
+  command:
+    - --model
+    - /models/${MODEL_FILE:?set MODEL_FILE in .env}
+    - --alias
+    - ${MODEL_ALIAS:-local-model}
+    - --host
+    - 0.0.0.0
+    - --port
+    - "8080"
+    - --ctx-size
+    - ${CTX_SIZE:-4096}
+    # Number of parallel request slots; the context is split between them.
+    - --parallel
+    - ${PARALLEL:-2}
+    # Expose Prometheus metrics on /metrics.
+    - --metrics
+  # No ports: only reachable as http://llm:8080 from containers on "backend".
+  networks: [backend]
+  healthcheck:
+    # /health returns 200 once the model is loaded, 503 while loading.
+    test: ["CMD", "curl", "-fsS", "http://localhost:8080/health"]
+    interval: 10s
+    timeout: 5s
+    retries: 3
+    start_period: 60s
+
 services:
   gateway:
     build: ./gateway
-    profiles: [cpu]
+    profiles: [cpu, gpu]
     restart: unless-stopped
     environment:
       GATEWAY_BACKEND_URL: http://llm:8080
@@ -19,46 +55,43 @@ services:
       - "127.0.0.1:${GATEWAY_PORT:-8000}:8000"
     networks: [frontend, backend]
     depends_on:
+      # Start the gateway only once the model is loaded. Only one of the two llama.cpp
+      # services exists per profile; required: false skips the one that is not active.
       llm:
-        # Start the gateway only once the model is loaded.
         condition: service_healthy
+        required: false
+      llm-gpu:
+        condition: service_healthy
+        required: false
 
   llm:
+    <<: *llm
     image: ${LLAMA_IMAGE:-ghcr.io/ggml-org/llama.cpp:server}
     profiles: [cpu]
-    restart: unless-stopped
-    volumes:
-      # Models are downloaded by scripts/download-model.sh; read-only is enough.
-      - ./models:/models:ro
-    command:
-      - --model
-      - /models/${MODEL_FILE:?set MODEL_FILE in .env}
-      - --alias
-      - ${MODEL_ALIAS:-local-model}
-      - --host
-      - 0.0.0.0
-      - --port
-      - "8080"
-      - --ctx-size
-      - ${CTX_SIZE:-4096}
-      # Number of parallel request slots; the context is split between them.
-      - --parallel
-      - ${PARALLEL:-2}
-      # Expose Prometheus metrics on /metrics (scraped in M4).
-      - --metrics
-    # No ports: only reachable as http://llm:8080 from containers on "backend".
-    networks: [backend]
-    healthcheck:
-      # /health returns 200 once the model is loaded, 503 while loading.
-      test: ["CMD", "curl", "-fsS", "http://localhost:8080/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 60s
+
+  llm-gpu:
+    <<: *llm
+    image: ${LLAMA_GPU_IMAGE:-ghcr.io/ggml-org/llama.cpp:server-cuda}
+    profiles: [gpu]
+    environment:
+      # Same as --n-gpu-layers: how many layers run on the GPU (99 = all of them).
+      LLAMA_ARG_N_GPU_LAYERS: ${GPU_LAYERS:-99}
+    networks:
+      backend:
+        # Same hostname as the CPU service, so gateway and Prometheus need no changes.
+        aliases: [llm]
+    deploy:
+      resources:
+        reservations:
+          # Requires the NVIDIA Container Toolkit on the host.
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
 
   prometheus:
     image: ${PROMETHEUS_IMAGE:-prom/prometheus:v3.15.1}
-    profiles: [cpu]
+    profiles: [cpu, gpu]
     restart: unless-stopped
     command:
       - --config.file=/etc/prometheus/prometheus.yml
@@ -80,7 +113,7 @@ services:
 
   grafana:
     image: ${GRAFANA_IMAGE:-grafana/grafana:13.2.6}
-    profiles: [cpu]
+    profiles: [cpu, gpu]
     restart: unless-stopped
     environment:
       GF_SECURITY_ADMIN_USER: admin

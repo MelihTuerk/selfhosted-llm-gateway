@@ -55,8 +55,10 @@ jobs:
 
       - name: docker compose config
         run: |
-          docker compose --profile cpu config --quiet
-          docker compose -f compose.yaml -f compose.dev.yaml --profile cpu config --quiet
+          for profile in cpu gpu; do
+            docker compose --profile "$profile" config --quiet
+            docker compose -f compose.yaml -f compose.dev.yaml --profile "$profile" config --quiet
+          done
 
   build:
     name: Build gateway image
