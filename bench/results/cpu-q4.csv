@@ -1,0 +1,25 @@
+label,hardware,model,concurrency,request,prompt_tokens,completion_tokens,ttft_s,gen_tps,latency_s,level_wall_s
+cpu-q4,i5-8600K (6 cores),qwen2.5-7b-instruct,1,1,293,128,6.1768,7.25,23.6942,185.787
+cpu-q4,i5-8600K (6 cores),qwen2.5-7b-instruct,1,2,291,128,5.9999,7.22,23.5926,185.787
+cpu-q4,i5-8600K (6 cores),qwen2.5-7b-instruct,1,3,287,128,6.0078,7.34,23.312,185.787
+cpu-q4,i5-8600K (6 cores),qwen2.5-7b-instruct,1,4,291,128,5.6312,7.3,23.0246,185.787
+cpu-q4,i5-8600K (6 cores),qwen2.5-7b-instruct,1,5,292,128,5.6994,7.22,23.2909,185.787
+cpu-q4,i5-8600K (6 cores),qwen2.5-7b-instruct,1,6,291,128,5.5352,7.25,23.0498,185.787
+cpu-q4,i5-8600K (6 cores),qwen2.5-7b-instruct,1,7,285,128,5.3636,7.22,22.9579,185.787
+cpu-q4,i5-8600K (6 cores),qwen2.5-7b-instruct,1,8,290,128,5.6005,7.36,22.8648,185.787
+cpu-q4,i5-8600K (6 cores),qwen2.5-7b-instruct,2,1,289,128,11.1241,5.02,36.4042,164.474
+cpu-q4,i5-8600K (6 cores),qwen2.5-7b-instruct,2,2,294,128,11.1237,5.02,36.4049,164.474
+cpu-q4,i5-8600K (6 cores),qwen2.5-7b-instruct,2,3,293,128,11.1502,3.64,46.0408,164.474
+cpu-q4,i5-8600K (6 cores),qwen2.5-7b-instruct,2,4,289,128,11.149,3.64,46.0373,164.474
+cpu-q4,i5-8600K (6 cores),qwen2.5-7b-instruct,2,5,289,128,10.8566,5.05,36.0236,164.474
+cpu-q4,i5-8600K (6 cores),qwen2.5-7b-instruct,2,6,289,128,10.856,5.05,36.0272,164.474
+cpu-q4,i5-8600K (6 cores),qwen2.5-7b-instruct,2,7,292,128,11.1189,3.64,46.0,164.474
+cpu-q4,i5-8600K (6 cores),qwen2.5-7b-instruct,2,8,289,128,11.113,3.64,45.9948,164.474
+cpu-q4,i5-8600K (6 cores),qwen2.5-7b-instruct,4,1,289,128,21.6073,5.55,44.4925,89.303
+cpu-q4,i5-8600K (6 cores),qwen2.5-7b-instruct,4,2,290,128,21.6067,5.55,44.4858,89.303
+cpu-q4,i5-8600K (6 cores),qwen2.5-7b-instruct,4,3,291,128,21.6065,5.55,44.4917,89.303
+cpu-q4,i5-8600K (6 cores),qwen2.5-7b-instruct,4,4,290,128,21.6059,5.55,44.4917,89.303
+cpu-q4,i5-8600K (6 cores),qwen2.5-7b-instruct,4,5,290,128,22.0947,5.59,44.8129,89.303
+cpu-q4,i5-8600K (6 cores),qwen2.5-7b-instruct,4,6,287,128,22.0903,5.59,44.8084,89.303
+cpu-q4,i5-8600K (6 cores),qwen2.5-7b-instruct,4,7,294,128,22.088,5.59,44.8101,89.303
+cpu-q4,i5-8600K (6 cores),qwen2.5-7b-instruct,4,8,292,128,22.0895,5.59,44.8101,89.303

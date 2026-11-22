@@ -1,0 +1,25 @@
+label,hardware,model,concurrency,request,prompt_tokens,completion_tokens,ttft_s,gen_tps,latency_s,level_wall_s
+gpu-q4,GTX 1060 6GB,qwen2.5-7b-instruct,1,1,292,128,0.7387,24.39,5.9453,47.697
+gpu-q4,GTX 1060 6GB,qwen2.5-7b-instruct,1,2,291,128,0.732,24.34,5.9489,47.697
+gpu-q4,GTX 1060 6GB,qwen2.5-7b-instruct,1,3,292,128,0.7317,24.32,5.9542,47.697
+gpu-q4,GTX 1060 6GB,qwen2.5-7b-instruct,1,4,292,128,0.744,24.32,5.9662,47.697
+gpu-q4,GTX 1060 6GB,qwen2.5-7b-instruct,1,5,289,128,0.7434,24.31,5.967,47.697
+gpu-q4,GTX 1060 6GB,qwen2.5-7b-instruct,1,6,286,128,0.7442,24.3,5.9712,47.697
+gpu-q4,GTX 1060 6GB,qwen2.5-7b-instruct,1,7,293,128,0.7362,24.26,5.9702,47.697
+gpu-q4,GTX 1060 6GB,qwen2.5-7b-instruct,1,8,292,128,0.7398,24.26,5.9737,47.697
+gpu-q4,GTX 1060 6GB,qwen2.5-7b-instruct,2,1,291,128,1.3214,23.11,6.818,37.703
+gpu-q4,GTX 1060 6GB,qwen2.5-7b-instruct,2,2,291,128,1.3213,23.1,6.8185,37.703
+gpu-q4,GTX 1060 6GB,qwen2.5-7b-instruct,2,3,290,128,1.482,12.07,12.007,37.703
+gpu-q4,GTX 1060 6GB,qwen2.5-7b-instruct,2,4,289,128,1.4809,12.07,12.0051,37.703
+gpu-q4,GTX 1060 6GB,qwen2.5-7b-instruct,2,5,292,128,1.314,23.08,6.8165,37.703
+gpu-q4,GTX 1060 6GB,qwen2.5-7b-instruct,2,6,290,128,1.3132,23.08,6.8165,37.703
+gpu-q4,GTX 1060 6GB,qwen2.5-7b-instruct,2,7,290,128,1.4863,12.02,12.0536,37.703
+gpu-q4,GTX 1060 6GB,qwen2.5-7b-instruct,2,8,294,128,1.4857,12.02,12.053,37.703
+gpu-q4,GTX 1060 6GB,qwen2.5-7b-instruct,4,1,290,128,2.5371,16.02,10.465,20.975
+gpu-q4,GTX 1060 6GB,qwen2.5-7b-instruct,4,2,291,128,2.5371,16.02,10.4655,20.975
+gpu-q4,GTX 1060 6GB,qwen2.5-7b-instruct,4,3,291,128,2.5372,16.02,10.4658,20.975
+gpu-q4,GTX 1060 6GB,qwen2.5-7b-instruct,4,4,293,128,2.536,16.02,10.463,20.975
+gpu-q4,GTX 1060 6GB,qwen2.5-7b-instruct,4,5,286,128,2.5769,16.01,10.5098,20.975
+gpu-q4,GTX 1060 6GB,qwen2.5-7b-instruct,4,6,288,128,2.5755,16.01,10.5079,20.975
+gpu-q4,GTX 1060 6GB,qwen2.5-7b-instruct,4,7,290,128,2.5756,16.01,10.5088,20.975
+gpu-q4,GTX 1060 6GB,qwen2.5-7b-instruct,4,8,288,128,2.5747,16.01,10.508,20.975
